@@ -55,7 +55,7 @@
                   <Insets left="100.0" right="100.0" top="80.0" />
                </VBox.margin>
             </Button>
-            <Button fx:id="calculateButton" mnemonicParsing="false" prefHeight="0.0" prefWidth="130.0" text="Calculate Salary">
+            <Button fx:id="calculateButton" mnemonicParsing="false" onAction="#onCalculateSalariesClicked" prefHeight="0.0" prefWidth="130.0" text="Calculate Salary">
                <VBox.margin>
                   <Insets left="100.0" right="100.0" top="15.0" />
                </VBox.margin>

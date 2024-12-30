@@ -46,6 +46,7 @@ public class HelloController {
     @FXML
     private TextField rateField;
 
+
     @FXML
     void initialize() {
 
@@ -55,25 +56,55 @@ public class HelloController {
 
         typeComboBox.getItems().addAll("Full-time", "Part-time", "Contractor");
 
-        // Настройка колонок таблицы
+
         tableName.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().name));
         tableType.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getClass().getSimpleName()));
         tableSalary.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().calculateSalary()).asObject());
 
-        // Устанавливаем обработчик выбора
+
+
         typeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
             updateFieldsVisibility(newValue);
         });
 
+        employeeTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                displaySelectedEmployeeData(newValue);
+            }
+        });
+
     }
 
+
+    private void displaySelectedEmployeeData(Employee employee) {
+        nameInput.setText(employee.name);
+
+
+        if (employee instanceof FullTimeEmployee) {
+            typeComboBox.setValue("Full-time");
+        } else if (employee instanceof PartTimeEmployee) {
+            typeComboBox.setValue("Part-time");
+            PartTimeEmployee partTimeEmployee = (PartTimeEmployee) employee;
+            rateField.setText(String.valueOf(partTimeEmployee.hourlyRate));
+            hoursField.setText(String.valueOf(partTimeEmployee.hoursWorked));
+        } else if (employee instanceof Contractor) {
+            typeComboBox.setValue("Contractor");
+            Contractor contractor = (Contractor) employee;
+            rateField.setText(String.valueOf(contractor.hourRate));
+            maxHoursField.setText(String.valueOf(contractor.maxHours));
+        }
+
+
+        updateFieldsVisibility(typeComboBox.getValue());
+    }
+
+
     private void updateFieldsVisibility(String type) {
-        // Скрыть все дополнительные поля
         hoursField.setVisible(false);
         rateField.setVisible(false);
         maxHoursField.setVisible(false);
 
-        // Показать нужные поля в зависимости от выбора
+
         if ("Part-time".equals(type)) {
             hoursField.setVisible(true);
             rateField.setVisible(true);
@@ -85,11 +116,28 @@ public class HelloController {
     }
     @FXML
     void onCalculateSalariesClicked() {
+        saveEmployeeChanges();
         List<Employee> employees = employeeTable.getItems();
         for (int i = 0; i < employees.size(); i++) {
             Employee employee = employees.get(i);
             double salary = employee.calculateSalary();
             System.out.println("Зарплата сотрудника " + employee.name + ": " + salary);
+        }
+        employeeTable.refresh();
+    }
+    @FXML
+    private void saveEmployeeChanges() {
+        Employee selectedEmployee = employeeTable.getSelectionModel().getSelectedItem();
+        if (selectedEmployee == null) return;
+
+        if (selectedEmployee instanceof PartTimeEmployee) {
+            PartTimeEmployee partTime = (PartTimeEmployee) selectedEmployee;
+            partTime.hourlyRate = Double.parseDouble(rateField.getText());
+            partTime.hoursWorked = Double.parseDouble(hoursField.getText());
+        } else if (selectedEmployee instanceof Contractor) {
+            Contractor contractor = (Contractor) selectedEmployee;
+            contractor.hourRate = Double.parseDouble(rateField.getText());
+            contractor.maxHours = Double.parseDouble(maxHoursField.getText());
         }
     }
 
@@ -100,7 +148,6 @@ public class HelloController {
         Employee newEmployee = null;
 
         if (name.isEmpty() || type == null) {
-            // Валидация
             return;
         }
 
@@ -108,18 +155,16 @@ public class HelloController {
             double salary = 100000.0;
             newEmployee = new FullTimeEmployee(name, salary);
         } else if ("Part-time".equals(type)) {
-            // Добавление сотрудника Part-time
             double hourlyRate = Double.parseDouble(rateField.getText());
             double hoursWorked = Double.parseDouble(hoursField.getText());
             newEmployee = new PartTimeEmployee(name, hourlyRate, hoursWorked);
         } else if ("Contractor".equals(type)) {
-            // Добавление сотрудника Contractor
             double hourlyRate = Double.parseDouble(rateField.getText());
             double maxHours = Double.parseDouble(maxHoursField.getText());
             newEmployee = new Contractor(name, hourlyRate, maxHours);
         }
 
-        // Добавление сотрудника в таблицу
+
         if (newEmployee != null) {
             employeeTable.getItems().add(newEmployee);
         }
